@@ -1,22 +1,23 @@
 #
 # Conditional build:
 %bcond_with	tests		# build with tests
-%bcond_without	online		# online self-test
+%bcond_with	online		# online self-test
 
 %if 0%{?_pld_builder:1}
 %undefine	with_online
 %endif
 
 %define		php_min_version 5.3.4
-Summary:	Dependency Manager for PHP
-Name:		composer
+%define		upstream_name	composer
+Summary:	Dependency Manager for PHP (legacy 1.x branch)
+Name:		composer1
 Version:	1.10.26
 Release:	1
 License:	MIT
 Group:		Development/Languages/PHP
-Source0:	https://github.com/composer/composer/archive/%{version}/%{name}-%{version}.tar.gz
+Source0:	https://github.com/composer/composer/archive/%{version}/%{upstream_name}-%{version}.tar.gz
 # Source0-md5:	170c36246e52522e17540a6aaee57d8c
-Source2:	https://raw.githubusercontent.com/iArren/%{name}-bash-completion/86a8129/composer
+Source2:	https://raw.githubusercontent.com/iArren/composer-bash-completion/86a8129/composer
 # Source2-md5:	cdeebf0a0da1fd07d0fd886d0461642e
 Source3:	autoload.php
 Patch0:		autoload.patch
@@ -26,11 +27,9 @@ URL:		https://getcomposer.org/
 BuildRequires:	php-devel
 BuildRequires:	rpm-php-pearprov >= 4.4.2-11
 BuildRequires:	rpmbuild(macros) >= 1.673
-# instead of filling duplicate deps for running tests,
-# update composer version that have neccessary runtime dependencies
-BuildRequires:	composer >= 1.7.0
 %{?with_online:BuildRequires:	%{php_name}-cli}
 %if %{with tests}
+BuildRequires:	composer >= 1.7.0
 BuildRequires:	git-core
 BuildRequires:	phpab
 BuildRequires:	phpunit >= 4.8
@@ -68,7 +67,7 @@ Suggests:	bash-completion-%{name}
 Suggests:	git-core
 Suggests:	mercurial
 Suggests:	subversion
-Conflicts:	satis < 1.0.0-1.alpha1.193
+Conflicts:	composer
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -78,21 +77,24 @@ Composer is a tool for dependency management in PHP.
 Composer helps you declare, manage and install dependencies of PHP
 projects, ensuring you have the right stack everywhere.
 
+This is the legacy 1.x branch for environments running PHP < 7.2.5.
+For PHP >= 7.2.5 environments use the composer (2.x) package instead.
+
 %package -n bash-completion-%{name}
-Summary:	Bash completion for Composer
-Summary(pl.UTF-8):	bashowe uzupełnianie nazw dla Composera
+Summary:	Bash completion for Composer 1
+Summary(pl.UTF-8):	bashowe uzupełnianie nazw dla Composera 1
 Group:		Applications/Shells
 Requires:	%{name}
 Requires:	bash-completion >= 2.0
 
 %description -n bash-completion-%{name}
-Bash completion for Composer package and dependency manager.
+Bash completion for Composer 1 package and dependency manager.
 
 %description -n bash-completion-%{name} -l pl.UTF-8
-Pakiet ten dostarcza bashowe uzupełnianie nazw dla Composera.
+Pakiet ten dostarcza bashowe uzupełnianie nazw dla Composera 1.
 
 %prep
-%setup -q
+%setup -q -n %{upstream_name}-%{version}
 %patch -P0 -p1
 %patch -P1 -p1
 %patch -P2 -p1
@@ -129,7 +131,7 @@ phpunit
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_bindir},%{php_data_dir}/Composer,/var/cache/composer}
 cp -a src/Composer $RPM_BUILD_ROOT%{php_data_dir}
-install -p bin/composer $RPM_BUILD_ROOT%{_bindir}/%{name}
+install -p bin/composer $RPM_BUILD_ROOT%{_bindir}/composer
 
 install -d $RPM_BUILD_ROOT%{bash_compdir}
 cp -p %{SOURCE2} $RPM_BUILD_ROOT%{bash_compdir}/composer
@@ -139,7 +141,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc README.md CHANGELOG.md PORTING_INFO
+%doc README.md CHANGELOG.md
 %doc src/Composer/res/LICENSE
 %attr(755,root,root) %{_bindir}/composer
 %{php_data_dir}/Composer
